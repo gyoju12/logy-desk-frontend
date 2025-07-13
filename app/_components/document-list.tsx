@@ -54,7 +54,7 @@ const DocumentList = () => {
             <TableRow key={doc.id}>
               <TableCell className="font-medium">{doc.filename}</TableCell>
               <TableCell className="text-center">
-                {new Date(doc.created_at).toLocaleString('ko-KR', {
+                {new Date(doc.uploaded_at).toLocaleString('ko-KR', {
                   year: 'numeric',
                   month: '2-digit',
                   day: '2-digit',

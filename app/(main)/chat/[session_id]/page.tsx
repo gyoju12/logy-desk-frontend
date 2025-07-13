@@ -4,13 +4,7 @@ import { useEffect } from 'react';
 import { useChatStore } from '@/app/_store/chat-store';
 import ChatView from '@/app/_components/chat-view';
 
-interface ChatPageProps {
-  params: {
-    session_id: string;
-  };
-}
-
-export default function ChatPage({ params }: ChatPageProps) {
+export default function ChatPage({ params }: { params: { session_id: string } }) {
   const { setCurrentSessionId } = useChatStore();
 
   useEffect(() => {

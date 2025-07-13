@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 export default function ChatSessionSidebar() {
   const {
     sessions,
-    isLoading,
+    isFetchingSessions,
     error,
     currentSessionId,
     fetchSessions,
@@ -21,9 +21,9 @@ export default function ChatSessionSidebar() {
   return (
     <div className="flex flex-col h-full p-4 border-r bg-gray-50">
       <div className="flex-grow overflow-y-auto">
-        {isLoading && <p>Loading sessions...</p>}
+        {isFetchingSessions && <p>Loading sessions...</p>}
         {error && <p className="text-red-500">{error}</p>}
-        {!isLoading && !error && sessions.length === 0 && (
+        {!isFetchingSessions && !error && sessions.length === 0 && (
           <p className="text-gray-500">No chat sessions found.</p>
         )}
         <ul className="space-y-2">

@@ -23,6 +23,7 @@ interface ChatState {
   messages: ChatMessage[];
   isSending: boolean;
   isFetchingHistory: boolean;
+  isFetchingSessions: boolean;
   error: string | null;
   fetchSessions: () => Promise<void>;
   fetchMessages: (sessionId: string) => Promise<void>;
@@ -41,16 +42,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   isSending: false,
   isFetchingHistory: false,
+  isFetchingSessions: false,
   error: null,
 
   fetchSessions: async () => {
+    set({ isFetchingSessions: true, error: null });
     try {
       const response = await axios.get(`${API_BASE_URL}/chat_sessions`);
       const sessionsList = Array.isArray(response.data) ? response.data : response.data.sessions;
-      set({ sessions: sessionsList || [] });
+      set({ sessions: sessionsList || [], isFetchingSessions: false });
     } catch (error) { 
       console.error("Failed to fetch chat sessions:", error);
-      set({ error: 'Failed to fetch chat sessions' });
+      set({ error: 'Failed to fetch chat sessions', isFetchingSessions: false });
     }
   },
 
