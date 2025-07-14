@@ -21,7 +21,8 @@ async function apiClient<T>(
     options.body = JSON.stringify(body);
   }
 
-  const fullUrl = `/api${url}`;
+  // Add /v1 prefix for API versioning
+  const fullUrl = `/api/v1${url}`;
 
   console.groupCollapsed(`API Request: ${method} ${fullUrl}`);
   console.log('URL:', fullUrl);
@@ -32,7 +33,12 @@ async function apiClient<T>(
   try {
     const response = await fetch(fullUrl, options);
 
-    const responseData = await response.json();
+    let responseData;
+    if (response.status !== 204) { // 204 No Content일 경우 JSON 파싱 시도 안함
+      responseData = await response.json();
+    } else {
+      responseData = {}; // 204일 경우 빈 객체 반환
+    }
 
     console.groupCollapsed(`API Response: ${response.status} ${fullUrl}`);
     console.log('Status:', response.status);
@@ -40,13 +46,23 @@ async function apiClient<T>(
     console.groupEnd();
 
     if (!response.ok) {
-      throw new Error(responseData.detail || 'An unknown error occurred');
+      let errorMessage = 'An unknown error occurred';
+      if (responseData.detail) {
+        if (Array.isArray(responseData.detail)) {
+          errorMessage = responseData.detail.map((err: any) => err.msg || err.message || JSON.stringify(err)).join(', ');
+        } else if (typeof responseData.detail === 'string') {
+          errorMessage = responseData.detail;
+        } else {
+          errorMessage = JSON.stringify(responseData.detail);
+        }
+      }
+      throw new Error(errorMessage);
     }
 
     return responseData as T;
   } catch (error: any) {
     console.groupCollapsed(`API Error: ${method} ${fullUrl}`);
-    console.error('Error:', error.message);
+    console.error('Error:', error);
     console.groupEnd();
 
     toast({
@@ -59,6 +75,14 @@ async function apiClient<T>(
   }
 }
 
+// Helper to normalize agent_type to lowercase
+function normalizeAgentType<T extends { agent_type?: string }>(data: T): T {
+  if (data && typeof data.agent_type === 'string') {
+    return { ...data, agent_type: data.agent_type.toLowerCase() } as T;
+  }
+  return data;
+}
+
 // --------------------------------------------------------------------------------
 // API Functions
 // --------------------------------------------------------------------------------
@@ -66,50 +90,45 @@ async function apiClient<T>(
 export const api = {
   // 3.1. Agents
   createAgent: (agentData: Omit<Agent, 'id'>): Promise<Agent> => {
-    return apiClient<Agent>('/agents/', 'POST', agentData);
+    return apiClient<Agent>('/agents/', 'POST', agentData).then(normalizeAgentType);
   },
   getAgents: (type?: 'main' | 'sub'): Promise<Agent[]> => {
     const url = type ? `/agents/?type=${type}` : '/agents/';
-    return apiClient<Agent[]>(url, 'GET');
+    return apiClient<Agent[]>(url, 'GET').then(agents => agents.map(normalizeAgentType));
   },
   getAgentById: (agentId: string): Promise<Agent> => {
-    return apiClient<Agent>(`/agents/${agentId}/`, 'GET');
+    return apiClient<Agent>(`/agents/${agentId}/`, 'GET').then(normalizeAgentType);
   },
   updateAgent: (agentId: string, agentData: Partial<Agent>): Promise<Agent> => {
-    return apiClient<Agent>(`/agents/${agentId}/`, 'PUT', agentData);
+    return apiClient<Agent>(`/agents/${agentId}/`, 'PUT', agentData).then(normalizeAgentType);
   },
   deleteAgent: (agentId: string): Promise<void> => {
     return apiClient<void>(`/agents/${agentId}/`, 'DELETE');
   },
 
   // 3.2. Knowledge Base
-  uploadDocument: (file: File): Promise<any> => {
+  uploadDocument: async (file: File): Promise<any> => {
     const formData = new FormData();
     formData.append('file', file);
 
-    return fetch('/api/documents/upload/', { // 백엔드 파일 업로드 엔드포인트에 맞게 수정 필요
-      method: 'POST',
-      body: formData,
-      // FormData를 사용할 때는 Content-Type 헤더를 명시적으로 설정하지 않습니다.
-      // 브라우저가 자동으로 multipart/form-data와 boundary를 설정해줍니다.
-    })
-    .then(response => {
-      if (!response.ok) {
-        return response.json().then(errorData => {
-          throw new Error(errorData.detail || '파일 업로드 실패');
-        });
-      }
-      return response.json();
-    })
-    .catch(error => {
-      console.error('File upload error:', error);
-      toast({
-        title: '파일 업로드 오류',
-        description: error.message || '파일 업로드 중 알 수 없는 오류가 발생했습니다.',
-        variant: 'destructive',
+    try {
+      // 중앙 집중식 apiClient 대신 직접 fetch 사용 (FormData 처리 이슈로 인해)
+      const response = await fetch(`/api/v1/documents/upload/`, {
+        method: 'POST',
+        body: formData,
+        // FormData를 사용할 때는 Content-Type을 설정하지 않아야 브라우저가 자동으로 설정함
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || '파일 업로드에 실패했습니다.');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('문서 업로드 중 오류 발생:', error);
       throw error;
-    });
+    }
   },
   getDocuments: (): Promise<any[]> => {
     return apiClient<any[]>('/documents/', 'GET');
@@ -124,22 +143,22 @@ export const api = {
   },
 
   getChatSessions: (): Promise<any[]> => {
-    return apiClient<any[]>('/chats/', 'GET');
+    return apiClient<any[]>('/chat_sessions/', 'GET');
   },
   getChatSessionById: (sessionId: string): Promise<any> => {
-    return apiClient<any>(`/chats/${sessionId}/`, 'GET');
+    return apiClient<any>(`/chat_sessions/${sessionId}/`, 'GET');
   },
   deleteChatSession: (sessionId: string): Promise<void> => {
-    return apiClient<void>(`/chats/${sessionId}/`, 'DELETE');
+    return apiClient<void>(`/chat_sessions/${sessionId}/`, 'DELETE');
   },
 
   getChatMessages: (sessionId: string, limit?: number): Promise<any[]> => {
-    const url = limit ? `/chats/${sessionId}/messages/?limit=${limit}` : `/chats/${sessionId}/messages/`;
+    const url = limit ? `/chat/${sessionId}/messages?limit=${limit}` : `/chat/${sessionId}/messages`;
     return apiClient<any[]>(url, 'GET');
   },
 
   // 3.4. Main Chat
   postChatMessage: (message: string, sessionId: string): Promise<any> => {
-    return apiClient<any>(`/chats/${sessionId}/messages/`, 'POST', { message });
+    return apiClient<any>(`/chat/${sessionId}/messages/`, 'POST', { role: 'user', content: message });
   },
 };

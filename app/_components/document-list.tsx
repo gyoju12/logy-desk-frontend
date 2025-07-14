@@ -53,16 +53,26 @@ const DocumentList = () => {
           documents.map((doc) => (
             <TableRow key={doc.id}>
               <TableCell className="font-medium">{doc.filename}</TableCell>
-              <TableCell className="text-center">
-                {new Date(doc.uploaded_at).toLocaleString('ko-KR', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false,
-                })}
+              <TableCell className="text-left">
+                {(() => {
+                  if (!doc.uploaded_at) return '날짜 정보 없음';
+                  let dateString = doc.uploaded_at;
+                  // Remove trailing 'Z' if it exists after a timezone offset
+                  if (dateString.endsWith('+00:00Z')) {
+                    dateString = dateString.slice(0, -1);
+                  }
+                  const date = new Date(dateString);
+                  if (isNaN(date.getTime())) return '날짜 형식 오류';
+                  return date.toLocaleString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                  });
+                })()}
               </TableCell>
               <TableCell className="text-right">
                 <Button

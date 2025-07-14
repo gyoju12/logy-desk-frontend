@@ -39,11 +39,16 @@ export default function AgentForm() {
 
   const handleSubmit = async () => {
     try {
+      const dataToSend = {
+        ...formData,
+        agent_type: formData.agent_type.toUpperCase() as 'MAIN' | 'SUB',
+      };
+
       if (selectedAgent) {
-        await updateAgent(selectedAgent.id, formData);
+        await updateAgent(selectedAgent.id, dataToSend);
         // After updating, keep the form populated with the new data
       } else {
-        await createAgent(formData);
+        await createAgent(dataToSend);
         selectAgent(null); // Reset form only after successful creation
       }
     } catch (error) {
@@ -66,6 +71,19 @@ export default function AgentForm() {
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
         <Input id="name" name="name" value={formData.name} onChange={handleChange} />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="agent_type">Agent Type</Label>
+        <Select name="agent_type" value={formData.agent_type} onValueChange={(value) => handleSelectChange('agent_type', value)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select agent type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="main">Main</SelectItem>
+            <SelectItem value="sub">Sub</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
