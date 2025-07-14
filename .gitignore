@@ -40,10 +40,9 @@ pnpm-debug.log*
 next-env.d.ts
 
 # Documentation
-API.md
-rules.md
-backEnd.md
-FrontEnd.md
+#.gemini/docs/API.md
+#.gemini/docs/backEnd.md
+#.gemini/docs/FrontEnd.md
 GEMINI.md
 
 # IDE configuration
