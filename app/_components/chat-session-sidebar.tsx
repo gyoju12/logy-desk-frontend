@@ -23,7 +23,7 @@ export default function ChatSessionSidebar() {
       <div className="flex-grow overflow-y-auto">
         {isFetchingSessions && <p>Loading sessions...</p>}
         {error && <p className="text-red-500">{error}</p>}
-        {!isFetchingSessions && !error && sessions.length === 0 && (
+        {!isFetchingSessions && !error && (sessions?.length ?? 0) === 0 && (
           <p className="text-gray-500">No chat sessions found.</p>
         )}
         <ul className="space-y-2">

@@ -25,7 +25,7 @@ export default function MessageList() {
     );
   }
 
-  if (!currentSessionId && messages.length === 0) {
+  if (!currentSessionId && (messages?.length ?? 0) === 0) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500">
         <p>상담을 선택하거나 새 상담을 시작하세요.</p>

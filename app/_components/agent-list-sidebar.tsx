@@ -17,7 +17,7 @@ export default function AgentListSidebar() {
       <div className="flex-1 space-y-2 overflow-y-auto">
         {isLoading ? (
           <p className="text-sm text-gray-500">로딩 중...</p>
-        ) : agents.length === 0 ? (
+        ) : (agents?.length ?? 0) === 0 ? (
           <p className="text-sm text-gray-500">등록된 에이전트가 없습니다.</p>
         ) : (
           agents.map((agent) => (

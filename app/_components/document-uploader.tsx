@@ -50,7 +50,7 @@ const DocumentUploader = () => {
       return;
     }
 
-    if (file.name.length > 255) {
+    if ((file?.name?.length ?? 0) > 255) {
       toast({
         title: "파일 이름이 너무 깁니다.",
         description: "파일 이름은 255자 이하여야 합니다.",

@@ -29,7 +29,7 @@ const DocumentList = () => {
     });
   };
 
-  if (isLoading && documents.length === 0) {
+  if (isLoading && (documents?.length ?? 0) === 0) {
     return <div className="text-center p-4">문서 목록을 불러오는 중...</div>;
   }
 
@@ -43,7 +43,7 @@ const DocumentList = () => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {documents.length === 0 ? (
+        {(documents?.length ?? 0) === 0 ? (
           <TableRow>
             <TableCell colSpan={3} className="text-center h-24">
               업로드된 문서가 없습니다.
