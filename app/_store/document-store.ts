@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import { api } from '@/app/_lib/api';
 
 // As per API.md
 export interface Document {
@@ -17,7 +17,7 @@ interface DocumentState {
   deleteDocument: (documentId: string) => Promise<void>;
 }
 
-const API_BASE_URL = '/api/v1';
+
 
 export const useDocumentStore = create<DocumentState>((set, get) => ({
   documents: [],
@@ -26,8 +26,8 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
   fetchDocuments: async () => {
     set({ isLoading: true });
     try {
-      const response = await axios.get<{ documents: Document[] }>(`${API_BASE_URL}/documents`);
-      set({ documents: response.data.documents, isLoading: false });
+      const fetchedDocuments = await api.getDocuments();
+      set({ documents: fetchedDocuments, isLoading: false });
     } catch (error) {
       console.error("Failed to fetch documents:", error);
       set({ isLoading: false });
@@ -39,7 +39,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     formData.append('file', file);
 
     try {
-      await axios.post(`${API_BASE_URL}/documents/upload`, formData);
+      await api.uploadDocument(file);
       set({ uploadStatus: 'success' });
       await get().fetchDocuments(); // Refresh the list
     } catch (error) {
@@ -53,7 +53,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
   deleteDocument: async (documentId) => {
     set({ isLoading: true });
     try {
-      await axios.delete(`${API_BASE_URL}/documents/${documentId}`);
+      await api.deleteDocument(documentId);
       await get().fetchDocuments(); // Refresh the list
     } catch (error) {
       console.error(`Failed to delete document ${documentId}:`, error);

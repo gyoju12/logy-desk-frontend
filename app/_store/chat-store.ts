@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import axios from 'axios';
 import { useAgentStore } from './agent-store';
+import { api } from '@/app/_lib/api';
 
 // As per API.md
 export interface ChatMessage {
@@ -34,7 +34,7 @@ interface ChatState {
   createSession: (agentId: string, title: string) => Promise<string>;
 }
 
-const API_BASE_URL = '/api/v1';
+
 
 export const useChatStore = create<ChatState>((set, get) => ({
   sessions: [],
@@ -48,8 +48,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   fetchSessions: async () => {
     set({ isFetchingSessions: true, error: null });
     try {
-      const response = await axios.get(`${API_BASE_URL}/chat_sessions`);
-      const sessionsList = Array.isArray(response.data) ? response.data : response.data.sessions;
+      const sessionsList = await api.getChatSessions();
       set({ sessions: sessionsList || [], isFetchingSessions: false });
     } catch (error) { 
       console.error("Failed to fetch chat sessions:", error);
@@ -60,10 +59,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   fetchMessages: async (sessionId) => {
     set({ isFetchingHistory: true, messages: [], error: null });
     try {
-      const response = await axios.get(`${API_BASE_URL}/chat/${sessionId}/messages`, {
-        params: { limit: 100 } 
-      });
-      set({ messages: response.data || [], isFetchingHistory: false });
+      const messages = await api.getChatMessages(sessionId, 100);
     } catch (error) {
       console.error(`Failed to fetch messages for session ${sessionId}:`, error);
       set({ isFetchingHistory: false, error: 'Failed to fetch messages' });
@@ -72,11 +68,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   createSession: async (agentId: string, title: string) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/chat_sessions`, { 
-        agent_id: agentId,
-        title,
-      });
-      return response.data.id;
+      const newSession = await api.createChatSession(agentId, title);
+      return newSession.id;
     } catch (error) {
       console.error("Failed to create session:", error);
       throw error;
@@ -100,10 +93,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       if (currentSessionId) {
         // Existing session: API returns only the assistant's message.
         // To ensure data consistency, we refetch all messages after sending.
-        await axios.post(`${API_BASE_URL}/chat/${currentSessionId}/messages`, {
-          role: 'user',
-          content: message,
-        });
+        await api.postChatMessage(message, currentSessionId);
         await fetchMessages(currentSessionId); // Refetch messages to get the latest state
         set({ isSending: false });
 
@@ -113,10 +103,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         const mainAgent = agents.find(a => a.agent_type === 'main');
         if (!mainAgent) throw new Error('Main agent not found.');
 
-        const response = await axios.post(`${API_BASE_URL}/chat`, {
-          agent_id: mainAgent.id,
-          content: message,
-        });
+        const responseData = await api.createChatSession(mainAgent.id, message);
 
         const { user_message, assistant_message, session_id } = response.data;
 
@@ -144,7 +131,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   deleteSession: async (sessionId: string) => {
     try {
-      await axios.delete(`${API_BASE_URL}/chat_sessions/${sessionId}`);
+      await api.deleteChatSession(sessionId);
       set(state => ({
         sessions: state.sessions.filter(s => s.id !== sessionId),
       }));

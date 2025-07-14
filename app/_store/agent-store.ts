@@ -1,7 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
-
-const API_BASE_URL = '/api/v1';
+import { api } from '@/app/_lib/api';
 
 // As per API.md
 export interface Agent {
@@ -37,10 +35,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   fetchAgents: async (type) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`${API_BASE_URL}/agents`, {
-        params: { type },
-      });
-      const fetchedAgents = Array.isArray(response.data) ? response.data : response.data.agents || [];
+      const fetchedAgents = await api.getAgents(type);
       
       set(state => {
         const existingAgents = new Map(state.agents.map(a => [a.id, a]));
@@ -59,7 +54,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   createAgent: async (agentData) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.post(`${API_BASE_URL}/agents`, agentData);
+      await api.createAgent(agentData);
       await get().fetchAgents(); // Refresh the list
     } catch (error) {
       console.error("Failed to create agent:", error);
@@ -71,8 +66,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   updateAgent: async (agentId, agentData) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.put(`${API_BASE_URL}/agents/${agentId}`, agentData);
-      const updatedAgent = response.data;
+      const updatedAgent = await api.updateAgent(agentId, agentData);
 
       set(state => ({
         agents: state.agents.map(a => (a.id === agentId ? updatedAgent : a)),
@@ -89,7 +83,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   deleteAgent: async (agentId) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.delete(`${API_BASE_URL}/agents/${agentId}`);
+      await api.deleteAgent(agentId);
       set(state => ({
         agents: state.agents.filter(a => a.id !== agentId),
         selectedAgent: state.selectedAgent?.id === agentId ? null : state.selectedAgent,

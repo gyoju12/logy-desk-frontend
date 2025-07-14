@@ -86,11 +86,30 @@ export const api = {
   uploadDocument: (file: File): Promise<any> => {
     const formData = new FormData();
     formData.append('file', file);
-    // Note: apiClient needs to be adapted for FormData or use a separate fetch call
-    // For now, this will fail as apiClient is JSON-only. This needs to be addressed.
-    console.warn('uploadDocument with apiClient is not implemented for FormData yet.');
-    // Placeholder - this needs a proper implementation for file uploads.
-    return Promise.reject('File upload not implemented');
+
+    return fetch('/api/documents/upload/', { // 백엔드 파일 업로드 엔드포인트에 맞게 수정 필요
+      method: 'POST',
+      body: formData,
+      // FormData를 사용할 때는 Content-Type 헤더를 명시적으로 설정하지 않습니다.
+      // 브라우저가 자동으로 multipart/form-data와 boundary를 설정해줍니다.
+    })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          throw new Error(errorData.detail || '파일 업로드 실패');
+        });
+      }
+      return response.json();
+    })
+    .catch(error => {
+      console.error('File upload error:', error);
+      toast({
+        title: '파일 업로드 오류',
+        description: error.message || '파일 업로드 중 알 수 없는 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+      throw error;
+    });
   },
   getDocuments: (): Promise<any[]> => {
     return apiClient<any[]>('/documents/', 'GET');
@@ -100,6 +119,10 @@ export const api = {
   },
 
   // 3.3. Chat Sessions
+  createChatSession: (agentId: string, title: string): Promise<ChatSession> => {
+    return apiClient<ChatSession>('/chat_sessions/', 'POST', { agent_id: agentId, title });
+  },
+
   getChatSessions: (): Promise<any[]> => {
     return apiClient<any[]>('/chats/', 'GET');
   },
@@ -108,6 +131,11 @@ export const api = {
   },
   deleteChatSession: (sessionId: string): Promise<void> => {
     return apiClient<void>(`/chats/${sessionId}/`, 'DELETE');
+  },
+
+  getChatMessages: (sessionId: string, limit?: number): Promise<any[]> => {
+    const url = limit ? `/chats/${sessionId}/messages/?limit=${limit}` : `/chats/${sessionId}/messages/`;
+    return apiClient<any[]>(url, 'GET');
   },
 
   // 3.4. Main Chat
