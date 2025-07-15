@@ -17,6 +17,12 @@ export interface ChatSession {
   created_at: string;
 }
 
+export interface CreateChatSessionResponse {
+  user_message: ChatMessage;
+  assistant_message: ChatMessage;
+  session_id: string;
+}
+
 interface ChatState {
   sessions: ChatSession[];
   currentSessionId: string | null;
@@ -71,7 +77,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   createSession: async (agentId: string, title: string) => {
     try {
       const newSession = await api.createChatSession(agentId, title);
-      return newSession.id;
+      return newSession.session_id;
     } catch (error) {
       console.error("Failed to create session:", error);
       throw error;
@@ -107,7 +113,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
         const responseData = await api.createChatSession(mainAgent.id, message);
 
-        const { user_message, assistant_message, session_id } = response.data;
+        const { user_message, assistant_message, session_id } = responseData;
 
         set({ currentSessionId: session_id });
         await get().fetchSessions(); // Fetch updated session list

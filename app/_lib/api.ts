@@ -1,5 +1,6 @@
 import { toast } from '@/hooks/use-toast';
 import { Agent } from '../_store/agent-store';
+import {ChatSession, CreateChatSessionResponse} from '../_store/chat-store';
 
 // --------------------------------------------------------------------------------
 // API Client - Centralized Fetch Handler
@@ -130,20 +131,20 @@ export const api = {
       throw error;
     }
   },
-  getDocuments: (): Promise<any[]> => {
-    return apiClient<any[]>('/documents/', 'GET');
+  getDocuments: (): Promise<{ documents: any[] }> => {
+    return apiClient<{ documents: any[] }>('/documents/', 'GET');
   },
   deleteDocument: (documentId: string): Promise<void> => {
     return apiClient<void>(`/documents/${documentId}/`, 'DELETE');
   },
 
   // 3.3. Chat Sessions
-  createChatSession: (agentId: string, title: string): Promise<ChatSession> => {
-    return apiClient<ChatSession>('/chat_sessions/', 'POST', { agent_id: agentId, title });
+  createChatSession: (agentId: string, title: string): Promise<CreateChatSessionResponse> => {
+    return apiClient<CreateChatSessionResponse>('/chat_sessions/', 'POST', { agent_id: agentId, title });
   },
 
-  getChatSessions: (): Promise<any[]> => {
-    return apiClient<any[]>('/chat_sessions/', 'GET');
+  getChatSessions: (): Promise<{ sessions: ChatSession[] }> => {
+    return apiClient<{ sessions: ChatSession[] }>('/chat_sessions/', 'GET');
   },
   getChatSessionById: (sessionId: string): Promise<any> => {
     return apiClient<any>(`/chat_sessions/${sessionId}/`, 'GET');

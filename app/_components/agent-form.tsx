@@ -41,7 +41,7 @@ export default function AgentForm() {
     try {
       const dataToSend = {
         ...formData,
-        agent_type: formData.agent_type.toUpperCase() as 'MAIN' | 'SUB',
+        agent_type: formData.agent_type,
       };
 
       if (selectedAgent) {
