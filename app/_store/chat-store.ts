@@ -48,8 +48,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
   fetchSessions: async () => {
     set({ isFetchingSessions: true, error: null });
     try {
-      const sessionsList = await api.getChatSessions();
-      set({ sessions: sessionsList || [], isFetchingSessions: false });
+      const fetchedSessions = await api.getChatSessions();
+      const sessionsArray = Array.isArray(fetchedSessions) ? fetchedSessions : fetchedSessions.sessions || [];
+      set({ sessions: sessionsArray, isFetchingSessions: false });
     } catch (error) { 
       console.error("Failed to fetch chat sessions:", error);
       set({ error: 'Failed to fetch chat sessions', isFetchingSessions: false });
@@ -59,7 +60,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   fetchMessages: async (sessionId) => {
     set({ isFetchingHistory: true, messages: [], error: null });
     try {
-      const messages = await api.getChatMessages(sessionId, 100);
+      const fetchedMessages = await api.getChatMessages(sessionId, 100);
+      set({ messages: fetchedMessages || [], isFetchingHistory: false });
     } catch (error) {
       console.error(`Failed to fetch messages for session ${sessionId}:`, error);
       set({ isFetchingHistory: false, error: 'Failed to fetch messages' });

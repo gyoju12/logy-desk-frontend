@@ -16,7 +16,7 @@ export default function ChatSessionSidebar() {
 
   useEffect(() => {
     fetchSessions();
-  }, [fetchSessions]);
+  }, []);
 
   return (
     <div className="flex flex-col h-full p-4 border-r bg-gray-50">
