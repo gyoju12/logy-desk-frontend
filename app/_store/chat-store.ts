@@ -81,7 +81,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   createSession: async (agentId: string, title: string) => {
     try {
       const newSession = await api.createChatSession(agentId, title);
-      return newSession.session_id;
+      return newSession.id;
     } catch (error) {
       console.error("Failed to create session:", error);
       throw error;
