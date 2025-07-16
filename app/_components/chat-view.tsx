@@ -3,7 +3,6 @@
 import SubAgentDisplay from './sub-agent-display';
 import MessageList from './message-list';
 import MessageInput from './message-input';
-import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 import { useChatStore } from '@/app/_store/chat-store';
 import { useAgentStore } from '@/app/_store/agent-store';
@@ -29,15 +28,10 @@ export default function ChatView() {
         <MessageList />
       </div>
       <div className="p-4 border-t">
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={startNewSession} className="whitespace-nowrap">
-            + New Chat
-          </Button>
-          <MessageInput 
-            disabled={!isReady}
-            placeholder={isReady ? "메세지를 입력하세요" : "메인 에이전트를 불러오는 중..."}
-          />
-        </div>
+        <MessageInput 
+          disabled={!isReady}
+          placeholder={isReady ? "메세지를 입력하세요" : "메인 에이전트를 불러오는 중..."}
+        />
       </div>
     </div>
   );
