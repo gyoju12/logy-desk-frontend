@@ -1,6 +1,6 @@
 import { toast } from '@/hooks/use-toast';
 import { Agent } from '../_store/agent-store';
-import {ChatSession, CreateChatSessionResponse} from '../_store/chat-store';
+import {ChatSession} from '../_store/chat-store';
 
 // --------------------------------------------------------------------------------
 // API Client - Centralized Fetch Handler
