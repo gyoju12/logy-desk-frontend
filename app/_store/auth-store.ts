@@ -7,25 +7,22 @@ interface AuthState {
   logout: () => void;
 }
 
-const getInitialState = (): AuthState => {
-  if (typeof window === 'undefined') {
-    return { isLoggedIn: false, userId: null };
-  }
-  const storedUserId = localStorage.getItem('userId');
-  return {
+export const useAuthStore = create<AuthState>((set) => {
+  const storedUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+  const initialState = {
     isLoggedIn: !!storedUserId,
     userId: storedUserId,
   };
-};
 
-export const useAuthStore = create<AuthState>((set) => ({
-  ...getInitialState(),
-  login: (userId) => {
-    localStorage.setItem('userId', userId);
-    set({ isLoggedIn: true, userId });
-  },
-  logout: () => {
-    localStorage.removeItem('userId');
-    set({ isLoggedIn: false, userId: null });
-  },
-}));
+  return {
+    ...initialState,
+    login: (userId) => {
+      localStorage.setItem('userId', userId);
+      set({ isLoggedIn: true, userId });
+    },
+    logout: () => {
+      localStorage.removeItem('userId');
+      set({ isLoggedIn: false, userId: null });
+    },
+  };
+});
