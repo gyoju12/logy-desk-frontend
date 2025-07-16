@@ -18,6 +18,13 @@ async function apiClient<T>(
     },
   };
 
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      (options.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
   if (body) {
     options.body = JSON.stringify(body);
   }
@@ -139,8 +146,8 @@ export const api = {
   },
 
   // 3.3. Chat Sessions
-  createChatSession: (agentId: string, title: string): Promise<CreateChatSessionResponse> => {
-    return apiClient<CreateChatSessionResponse>('/chat_sessions/', 'POST', { agent_id: agentId, title });
+  createChatSession: (title: string, userId: string): Promise<ChatSession> => {
+    return apiClient<ChatSession>('/chat_sessions/', 'POST', { title, user_id: userId });
   },
 
   getChatSessions: (): Promise<{ sessions: ChatSession[] }> => {

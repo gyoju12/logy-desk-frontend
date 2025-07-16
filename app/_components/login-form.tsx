@@ -4,12 +4,16 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuthStore } from '../_store/auth-store';
 
 export default function LoginForm() {
   const router = useRouter();
+  const login = useAuthStore((state) => state.login);
 
   const handleLogin = () => {
-    // MVP: No actual authentication, just redirect
+    // MVP: Use a hardcoded user_id for now
+    const tempUserId = '00000000-0000-0000-0000-000000000001'; // Example UUID
+    login(tempUserId);
     router.push('/chat');
   };
 

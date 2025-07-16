@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useAuthStore } from './auth-store';
 import { useAgentStore } from './agent-store';
 import { api } from '@/app/_lib/api';
 
@@ -17,12 +18,6 @@ export interface ChatSession {
   created_at: string;
 }
 
-export interface CreateChatSessionResponse {
-  user_message: ChatMessage;
-  assistant_message: ChatMessage;
-  session_id: string;
-}
-
 interface ChatState {
   sessions: ChatSession[];
   currentSessionId: string | null;
@@ -31,6 +26,8 @@ interface ChatState {
   isFetchingHistory: boolean;
   isFetchingSessions: boolean;
   error: string | null;
+  isNewChatDialogOpen: boolean; // New state for dialog
+
   fetchSessions: () => Promise<void>;
   fetchMessages: (sessionId: string) => Promise<void>;
   sendMessage: (message: string) => Promise<void>;
@@ -38,6 +35,11 @@ interface ChatState {
   setCurrentSessionId: (sessionId: string | null) => void;
   startNewSession: () => void;
   createSession: (agentId: string, title: string) => Promise<string>;
+
+  // New actions for dialog
+  openNewChatDialog: () => void;
+  closeNewChatDialog: () => void;
+  confirmNewChatSession: (title: string) => Promise<void>;
 }
 
 
@@ -50,7 +52,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isFetchingHistory: false,
   isFetchingSessions: false,
   error: null,
+  isNewChatDialogOpen: false, // Initial state
 
+  // ... (fetchSessions, fetchMessages, createSession remain the same)
   fetchSessions: async () => {
     set({ isFetchingSessions: true, error: null });
     try {
@@ -86,10 +90,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   sendMessage: async (message: string) => {
     const { currentSessionId, messages, fetchMessages } = get();
+    
+    if (!currentSessionId) {
+      console.error("Cannot send message without an active session.");
+      set({ error: "No active session to send message to." });
+      return;
+    }
+
     const tempId = `temp_${Date.now()}`;
     const newUserMessage: ChatMessage = {
       id: tempId,
-      session_id: currentSessionId || 'new',
+      session_id: currentSessionId,
       role: 'user',
       content: message,
       created_at: new Date().toISOString(),
@@ -98,35 +109,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ messages: [...messages, newUserMessage], isSending: true, error: null });
 
     try {
-      if (currentSessionId) {
-        // Existing session: API returns only the assistant's message.
-        // To ensure data consistency, we refetch all messages after sending.
-        await api.postChatMessage(message, currentSessionId);
-        await fetchMessages(currentSessionId); // Refetch messages to get the latest state
-        set({ isSending: false });
-
-      } else {
-        // New session: API returns user_message, assistant_message, and session_id.
-        const { agents } = useAgentStore.getState();
-        const mainAgent = agents.find(a => a.agent_type === 'main');
-        if (!mainAgent) throw new Error('Main agent not found.');
-
-        const responseData = await api.createChatSession(mainAgent.id, message);
-
-        const { user_message, assistant_message, session_id } = responseData;
-
-        set({ currentSessionId: session_id });
-        await get().fetchSessions(); // Fetch updated session list
-
-        set(state => ({
-          messages: [
-            ...state.messages.filter(m => m.id !== tempId),
-            user_message,
-            assistant_message,
-          ],
-          isSending: false,
-        }));
-      }
+      await api.postChatMessage(message, currentSessionId);
+      await fetchMessages(currentSessionId); 
+      set({ isSending: false });
     } catch (error) {
       console.error("Failed to send message:", error);
       set(state => ({
@@ -160,6 +145,40 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
   
   startNewSession: () => {
-    set({ currentSessionId: null, messages: [] });
+    get().openNewChatDialog();
+  },
+
+  // --- New Dialog Actions ---
+  openNewChatDialog: () => {
+    set({ isNewChatDialogOpen: true });
+  },
+
+  closeNewChatDialog: () => {
+    set({ isNewChatDialogOpen: false });
+  },
+
+  confirmNewChatSession: async (title: string) => {
+    set({ isSending: true, error: null });
+    try {
+      const { userId } = useAuthStore.getState();
+      if (!userId) {
+        throw new Error('User not logged in. Cannot create session.');
+      }
+
+      const newSession = await api.createChatSession(title, userId);
+      
+      await get().fetchSessions(); // Refresh session list
+      
+      set({ 
+        currentSessionId: newSession.id, // Use newSession.id
+        messages: [], // Start with an empty message list
+        isNewChatDialogOpen: false,
+        isSending: false 
+      });
+
+    } catch (error) {
+      console.error("Failed to create new chat session:", error);
+      set({ error: 'Failed to create session', isSending: false });
+    }
   },
 }));
