@@ -14,6 +14,7 @@ export default function AgentListSidebar() {
   return (
     <div className="w-64 border-r p-4 flex flex-col">
       <h2 className="text-xl font-bold mb-4">Agents</h2>
+      <Button className="w-full mb-4" onClick={() => selectAgent(null)}>+ New Agent</Button>
       <div className="flex-1 space-y-2 overflow-y-auto">
         {isLoading ? (
           <p className="text-sm text-gray-500">로딩 중...</p>
@@ -32,7 +33,6 @@ export default function AgentListSidebar() {
           ))
         )}
       </div>
-      <Button className="mt-4" onClick={() => selectAgent(null)}>+ New Agent</Button>
     </div>
   );
 }

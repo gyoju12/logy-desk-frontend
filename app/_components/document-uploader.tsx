@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { useDocumentStore } from '@/app/_store/document-store';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 
 const DocumentUploader = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -65,17 +66,22 @@ const DocumentUploader = () => {
   const isUploading = uploadStatus === 'uploading';
 
   return (
-    <div className="flex items-center space-x-2">
-      <Label htmlFor="file-upload" className="flex-grow">
-        <div className="flex items-center space-x-2 border rounded-md p-2 cursor-pointer hover:bg-accent">
-          <Button asChild variant="ghost">
-            <span>파일 선택</span>
-          </Button>
-          <span className="text-sm text-muted-foreground truncate">
-            {file ? file.name : '선택된 파일 없음'}
-          </span>
-        </div>
-      </Label>
+    <div
+      className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md cursor-pointer hover:border-primary transition-colors"
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          setFile(e.dataTransfer.files[0]);
+        }
+      }}
+      onClick={() => inputRef.current?.click()}
+    >
+      <p className="text-lg text-muted-foreground mb-2">파일을 여기에 드래그하거나 클릭하여 선택하세요.</p>
       <Input
         id="file-upload"
         type="file"
@@ -83,9 +89,17 @@ const DocumentUploader = () => {
         onChange={handleFileChange}
         className="hidden"
       />
-      <Button onClick={handleUpload} disabled={isUploading || !file}>
-        {isUploading ? '업로드 중...' : '업로드'}
-      </Button>
+      {file && (
+        <div className="flex flex-col items-center space-y-2 mt-2 w-full">
+          <span className="text-sm font-medium truncate">{file.name}</span>
+          {isUploading && (
+            <Progress value={uploadStatus === 'uploading' ? 50 : 100} className="w-full" />
+          )}
+          <Button onClick={handleUpload} disabled={isUploading} size="sm" className="w-full">
+            {isUploading ? '업로드 중...' : '업로드'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

@@ -26,11 +26,9 @@ export default function ChatSessionSidebar() {
       
       <Button 
         className="w-full mb-4" 
-        variant="outline" 
         onClick={startNewSession} // Call startNewSession on click
       >
-        <PlusCircle className="w-4 h-4 mr-2" />
-        New Chat
+        + New Chat
       </Button>
       <div className="flex-grow overflow-y-auto">
         {isFetchingSessions && <p className="p-4 text-sm text-gray-500">Loading sessions...</p>}
@@ -42,8 +40,8 @@ export default function ChatSessionSidebar() {
           {sessions.map((session) => (
             <li key={session.id} className="flex items-center justify-between group">
               <Button
-                variant={currentSessionId === session.id ? 'secondary' : 'ghost'}
-                className={`w-full justify-start truncate h-9 ${currentSessionId === session.id ? 'hover:bg-secondary' : ''}`}
+                variant={currentSessionId === session.id ? 'default' : 'ghost'}
+                className={`w-full justify-start h-9 ${currentSessionId === session.id ? 'bg-gray-800 text-white hover:bg-gray-700' : 'dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700'}`}
                 onClick={() => setCurrentSessionId(session.id)}
               >
                 {session.title || 'New Chat'}

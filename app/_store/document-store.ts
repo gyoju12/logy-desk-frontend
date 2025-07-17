@@ -6,6 +6,7 @@ export interface Document {
   id: string;
   filename: string;
   uploaded_at: string;
+  processing_status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 }
 
 interface DocumentState {
@@ -15,6 +16,9 @@ interface DocumentState {
   fetchDocuments: () => Promise<void>;
   uploadDocument: (file: File) => Promise<void>;
   deleteDocument: (documentId: string) => Promise<void>;
+  pollingIntervalId: NodeJS.Timeout | null;
+  startPolling: (interval: number) => void;
+  stopPolling: () => void;
 }
 
 
@@ -60,6 +64,24 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       console.error(`Failed to delete document ${documentId}:`, error);
     } finally {
       set({ isLoading: false });
+    }
+  },
+  pollingIntervalId: null,
+  startPolling: (interval) => {
+    const { fetchDocuments, pollingIntervalId } = get();
+    if (pollingIntervalId) {
+      clearInterval(pollingIntervalId);
+    }
+    const id = setInterval(() => {
+      fetchDocuments();
+    }, interval);
+    set({ pollingIntervalId: id });
+  },
+  stopPolling: () => {
+    const { pollingIntervalId } = get();
+    if (pollingIntervalId) {
+      clearInterval(pollingIntervalId);
+      set({ pollingIntervalId: null });
     }
   },
 }));

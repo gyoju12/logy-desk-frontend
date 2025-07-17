@@ -11,17 +11,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation';
 import { useDocumentStore } from "@/app/_store/document-store";
+import { Badge } from "@/components/ui/badge";
 
 const DocumentList = () => {
+  const router = useRouter();
   const { toast } = useToast();
-  const { documents, isLoading, fetchDocuments, deleteDocument } = useDocumentStore();
+  const { documents, isLoading, fetchDocuments, deleteDocument, startPolling, stopPolling } = useDocumentStore();
 
   useEffect(() => {
     fetchDocuments();
-  }, [fetchDocuments]);
+    startPolling(5000); // 5초마다 폴링 시작
 
-  const handleDelete = async (docId: string, docName: string) => {
+    return () => {
+      stopPolling(); // 컴포넌트 언마운트 시 폴링 중지
+    };
+  }, [fetchDocuments, startPolling, stopPolling]);
+
+  const handleDelete = async (e: React.MouseEvent, docId: string, docName: string) => {
+    e.stopPropagation(); // Prevent row click event
     await deleteDocument(docId);
     toast({
         title: "삭제 완료",
@@ -39,6 +48,7 @@ const DocumentList = () => {
         <TableRow>
           <TableHead>파일명</TableHead>
           <TableHead>업로드 날짜</TableHead>
+          <TableHead>처리 상태</TableHead>
           <TableHead className="text-right">작업</TableHead>
         </TableRow>
       </TableHeader>
@@ -51,7 +61,11 @@ const DocumentList = () => {
           </TableRow>
         ) : (
           documents.map((doc) => (
-            <TableRow key={doc.id}>
+            <TableRow
+              key={doc.id}
+              onClick={() => router.push(`/knowledge/${doc.id}`)}
+              className="cursor-pointer hover:bg-muted"
+            >
               <TableCell className="font-medium">{doc.filename}</TableCell>
               <TableCell className="text-left">
                 {(() => {
@@ -74,11 +88,21 @@ const DocumentList = () => {
                   });
                 })()}
               </TableCell>
+              <TableCell className="text-left">
+                <Badge variant={
+                  doc.processing_status === 'COMPLETED' ? 'default' :
+                  doc.processing_status === 'PROCESSING' ? 'secondary' :
+                  doc.processing_status === 'PENDING' ? 'outline' :
+                  'destructive'
+                }>
+                  {doc.processing_status}
+                </Badge>
+              </TableCell>
               <TableCell className="text-right">
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => handleDelete(doc.id, doc.filename)}
+                  onClick={(e) => handleDelete(e, doc.id, doc.filename)}
                   disabled={isLoading}
                 >
                   삭제

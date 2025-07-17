@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 
 const initialState: Omit<Agent, 'id'> = {
   name: '',
@@ -104,6 +105,19 @@ export default function AgentForm() {
             <SelectItem value="anthropic/claude-3.5-sonnet">anthropic/claude-3.5-sonnet</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="temperature">Temperature: {formData.temperature.toFixed(2)}</Label>
+        <Slider
+          id="temperature"
+          name="temperature"
+          min={0.0}
+          max={2.0}
+          step={0.05}
+          value={[formData.temperature]}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, temperature: value[0] }))}
+        />
       </div>
 
       <div className="space-y-2">
