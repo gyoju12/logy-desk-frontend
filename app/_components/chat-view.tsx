@@ -1,6 +1,5 @@
 'use client';
 
-import SubAgentDisplay from './sub-agent-display';
 import MessageList from './message-list';
 import MessageInput from './message-input';
 import { useEffect } from 'react';
@@ -15,6 +14,7 @@ export default function ChatView() {
     // 컴포넌트 마운트 시 최초 한 번만 세션과 에이전트를 가져옵니다.
     fetchSessions();
     fetchAgents('main');
+    fetchAgents('sub'); // sub agents도 미리 로드
   }, [fetchSessions, fetchAgents]);
 
   const mainAgent = agents.find(agent => agent.agent_type === 'main');
@@ -22,15 +22,14 @@ export default function ChatView() {
   const isReady = currentSessionId !== null || mainAgent !== undefined;
 
   return (
-    <div className="flex flex-col h-full">
-      <SubAgentDisplay />
-      <div className="flex-1 overflow-y-auto p-4 min-h-0">
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex-1 overflow-y-auto min-h-0">
         <MessageList />
       </div>
-      <div className="p-4 border-t">
+      <div className="py-4 border-t bg-background/95 backdrop-blur">
         <MessageInput 
           disabled={!isReady}
-          placeholder={isReady ? "메세지를 입력하세요" : "메인 에이전트를 불러오는 중..."}
+          placeholder={isReady ? "메시지를 입력하세요..." : "메인 에이전트를 불러오는 중..."}
         />
       </div>
     </div>

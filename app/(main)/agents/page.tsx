@@ -9,10 +9,8 @@ export default function AgentsPage() {
   }, []);
 
   return (
-    <div className="w-full">
-        <div className="p-4">
-            <AgentManager />
-        </div>
+    <div className="w-full h-full bg-background">
+      <AgentManager />
     </div>
   );
 }

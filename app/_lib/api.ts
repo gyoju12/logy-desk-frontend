@@ -166,7 +166,7 @@ export const api = {
   },
 
   // 3.4. Main Chat
-  postChatMessage: (message: string, sessionId: string): Promise<any> => {
-    return apiClient<any>(`/chat/${sessionId}/messages/`, 'POST', { role: 'user', content: message });
+  postChatMessage: (message: string, sessionId: string): Promise<{ messages: any[] }> => {
+    return apiClient<{ messages: any[] }>(`/chat/${sessionId}/messages`, 'POST', { role: 'user', content: message });
   },
 };

@@ -16,6 +16,7 @@ interface DocumentState {
   fetchDocuments: () => Promise<void>;
   uploadDocument: (file: File) => Promise<void>;
   deleteDocument: (documentId: string) => Promise<void>;
+  getDocumentName: (documentId: string) => string;
   pollingIntervalId: NodeJS.Timeout | null;
   startPolling: (interval: number) => void;
   stopPolling: () => void;
@@ -65,6 +66,10 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+  getDocumentName: (documentId) => {
+    const document = get().documents.find(doc => doc.id === documentId);
+    return document ? document.filename : '문서 상세 정보';
   },
   pollingIntervalId: null,
   startPolling: (interval) => {
