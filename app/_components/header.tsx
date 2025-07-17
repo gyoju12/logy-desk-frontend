@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import ThemeSelector from '@/app/_components/theme-selector';
 
 export default function Header() {
   const router = useRouter();
@@ -47,7 +48,10 @@ export default function Header() {
           </Link>
         </nav>
       </div>
-      <Button variant="outline" onClick={handleLogout}>Logout</Button>
+      <div className="flex items-center gap-2">
+        <ThemeSelector />
+        <Button variant="outline" onClick={handleLogout}>Logout</Button>
+      </div>
     </header>
   );
 }
